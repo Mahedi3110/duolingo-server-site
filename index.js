@@ -39,11 +39,6 @@ async function run() {
         const userList = client.db("duolingo").collection("users");
         const classList = client.db("duolingo").collection("classes");
 
-        // app.get('/category', async (req, res) => {
-        //     const result = await components.find().toArray();
-        //     res.send(result);
-        // })
-
         app.post('/users', async (req, res) => {
             const user = req.body;
             const query = { email: user.email }
@@ -60,53 +55,67 @@ async function run() {
             res.send(result);
         })
 
-        // app.post('/addList', async (req, res) => {
-        //     const product = req.body;
-        //     const result = await addList.insertOne(product);
-        //     res.send(result);
-        // })
+        app.post('/classes', async (req, res) => {
+            const classes = req.body;
+            const result = await classList.insertOne(classes);
+            res.send(result);
+        })
 
-        // app.get('/addList', async (req, res) => {
-        //     const result = await addList.find().toArray();
-        //     res.send(result);
-        // })
+        app.get('/classes', async (req, res) => {
+            const result = await classList.find().toArray();
+            res.send(result);
+        })
 
-        // app.delete('/addList/:id', async (req, res) => {
-        //     const id = req.params.id;
-        //     const query = { _id: new ObjectId(id) }
-        //     const result = await addList.deleteOne(query);
-        //     res.send(result);
-        // })
+        app.delete('/classes/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await classList.deleteOne(query);
+            res.send(result);
+        })
 
-        // app.put('/addList/:id', async (req, res) => {
-        //     const id = req.params.id;
-        //     const filter = { _id: new ObjectId(id) }
-        //     const option = { upsert: true }
-        //     const updatedValue = req.body;
+        app.put('/classes/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const option = { upsert: true }
+            const updatedValue = req.body;
 
-        //     const value = {
-        //         $set: {
-        //             photo: updatedValue.photo,
-        //             name: updatedValue.name,
-        //             sellerName: updatedValue.sellerName,
-        //             email: updatedValue.email,
-        //             category: updatedValue.category,
-        //             price: updatedValue.price,
-        //             rating: updatedValue.rating,
-        //             quantity: updatedValue.quantity,
-        //             about: updatedValue.about
-        //         }
-        //     }
-        //     const result = await addList.updateOne(filter, value, option);
-        //     res.send(result);
-        // })
+            const value = {
+                $set: {
+                    photo: updatedValue?.photo,
+                    name: updatedValue?.name,
+                    instructorName: updatedValue?.instructorName,
+                    email: updatedValue?.email,
+                    price: parseInt(updatedValue?.price),
+                    about: updatedValue?.about,
+                    status: updatedValue?.status,
+                    availableSeats: parseInt(updatedValue?.availableSeats)
+                }
+            }
+            const result = await classList.updateOne(filter, value, option);
+            res.send(result);
+        })
 
-        // app.delete('/addList/:mail', async (req, res) => {
-        //     const mail = req.params.mail;
-        //     const query = { email: mail }
-        //     const result = await addList.deleteMany(query);
-        //     res.send(result);
-        // })
+        app.put('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const option = { upsert: true }
+            const updatedValue = req.body;
+
+            const value = {
+                $set: {
+                    status: updatedValue?.status
+                }
+            }
+            const result = await userList.updateOne(filter, value, option);
+            res.send(result);
+        })
+
+        app.delete('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await userList.deleteOne(query);
+            res.send(result);
+        })
 
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
