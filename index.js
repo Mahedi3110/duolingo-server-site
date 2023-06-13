@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
+const stripe = require('stripe')(process.env.PS)
 const app = express();
 const port = process.env.PORT || 7000;
 
@@ -38,6 +39,7 @@ async function run() {
 
         const userList = client.db("duolingo").collection("users");
         const classList = client.db("duolingo").collection("classes");
+        const selectList = client.db("duolingo").collection("select")
 
         app.post('/users', async (req, res) => {
             const user = req.body;
@@ -52,6 +54,28 @@ async function run() {
 
         app.get('/users', async (req, res) => {
             const result = await userList.find().toArray();
+            res.send(result);
+        })
+
+        app.put('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const option = { upsert: true }
+            const updatedValue = req.body;
+
+            const value = {
+                $set: {
+                    status: updatedValue?.status
+                }
+            }
+            const result = await userList.updateOne(filter, value, option);
+            res.send(result);
+        })
+
+        app.delete('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await userList.deleteOne(query);
             res.send(result);
         })
 
@@ -95,7 +119,25 @@ async function run() {
             res.send(result);
         })
 
-        app.put('/users/:id', async (req, res) => {
+        app.post('/select', async (req, res) => {
+            const select = req.body;
+            const result = await selectList.insertOne(select);
+            res.send(result);
+        })
+
+        app.get('/select', async (req, res) => {
+            const result = await selectList.find().toArray();
+            res.send(result);
+        })
+
+        app.delete('/select/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await selectList.deleteOne(query);
+            res.send(result);
+        })
+
+        app.put('/select/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) }
             const option = { upsert: true }
@@ -106,15 +148,22 @@ async function run() {
                     status: updatedValue?.status
                 }
             }
-            const result = await userList.updateOne(filter, value, option);
+            const result = await selectList.updateOne(filter, value, option);
             res.send(result);
         })
 
-        app.delete('/users/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: new ObjectId(id) }
-            const result = await userList.deleteOne(query);
-            res.send(result);
+        //payment
+        app.post('/create-payment-intent', async (req, res) => {
+            const { price } = req.body;
+            const amount = price * 100;
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: 'usd',
+                payment_method_types: ['card']
+            });
+            res.send({
+                clientSecret: paymentIntent.client_secret
+            })
         })
 
         await client.db("admin").command({ ping: 1 });
