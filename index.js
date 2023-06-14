@@ -13,9 +13,11 @@ const corsOptions = {
     origin: '*',
     credentials: true,
     optionSuccessStatus: 200,
+    methods: ['GET', 'POST', 'PUT', 'DELETE']
 }
 
 app.use(cors(corsOptions))
+app.options("", cors(corsOptions))
 
 app.use(express.json())
 
@@ -59,9 +61,11 @@ async function run() {
 
         app.put('/users/:id', async (req, res) => {
             const id = req.params.id;
+            console.log(id);
             const filter = { _id: new ObjectId(id) }
             const option = { upsert: true }
             const updatedValue = req.body;
+            console.log(updatedValue);
 
             const value = {
                 $set: {
